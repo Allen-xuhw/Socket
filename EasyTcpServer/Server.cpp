@@ -19,11 +19,11 @@ int main()
 	SOCKET _sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); //AF_INET表示ipv4
 	if (INVALID_SOCKET == _sock)
 	{
-		printf("FAIL TO BUILD A SOCKET...\n");
+		printf("建立SOCKET失败...\n");
 	}
 	else
 	{
-		printf("SUCCESSFULLY BUILD A SOCKET...\n");
+		printf("成功建立SOCKET...\n");
 	}
 
 	//bind a net port
@@ -33,45 +33,75 @@ int main()
 	_sin.sin_addr.S_un.S_addr = INADDR_ANY; //INADDR_ANY表示任意本机的任意ip地址
 	if (SOCKET_ERROR == bind(_sock, (sockaddr*)&_sin, sizeof(_sin)))
 	{
-		printf("AN ERROR OCCURED IN BINDING...\n");
+		printf("绑定端口失败...\n");
 	}
 	else
 	{
-		printf("SUCCESSFULLY BIND...\n");
+		printf("成功绑定端口...\n");
 	}
 
 	//listen to the net port
 	if (SOCKET_ERROR == listen(_sock, 5))
 	{
-		printf("AN ERROR OCCURED IN LISTENING...\n");
+		printf("监听端口时产生错误...\n");
 	}
 	else
 	{
-		printf("LISTENING...\n");
+		printf("正在监听...\n");
 	}
 
 	//accept the connection
 	sockaddr_in clientAddr = {};
 	int nAddrLen = sizeof(sockaddr_in);
 	SOCKET _cSock = INVALID_SOCKET;
-	char msgBuf[] = "Hello, I'm Server.";
-	int bufLen = strlen(msgBuf) + 1;
+	_cSock = accept(_sock, (sockaddr*)&clientAddr, &nAddrLen);
+	if (INVALID_SOCKET == _cSock)
+	{
+		printf("连接客户端失败...\n");
+	}
+	printf("新客户端: IP = %s \n", inet_ntoa(clientAddr.sin_addr));
+	char _recvBuf[128] = {};
 	while (true)
 	{
-		_cSock = accept(_sock, (sockaddr*)&clientAddr, &nAddrLen);
-		if (INVALID_SOCKET == _cSock)
+		//receive the data from the client
+		int nLen = recv(_cSock, _recvBuf, 128, 0);
+		if (nLen <= 0)
 		{
-			printf("FAIL TO ACCEPT THE CLIENT...\n");
+			printf("客户端已离开...\n");
+			break;
 		}
-		printf("a new client: IP = %s \n", inet_ntoa(clientAddr.sin_addr));
-		//send a data to the client
-		send(_cSock, msgBuf, bufLen, 0); //0 是结尾符
+		else
+		{
+			printf("接收到命令:%s \n", _recvBuf);
+		}
+
+		//address the request
+		if (0 == strcmp(_recvBuf, "getName"))
+		{
+			char msgBuf[] = "Allen";
+			int bufLen = strlen(msgBuf) + 1;
+			send(_cSock, msgBuf, bufLen, 0);
+		}
+		else if (0 == strcmp(_recvBuf, "getAge"))
+		{
+			char msgBuf[] = "22.";
+			int bufLen = strlen(msgBuf) + 1;
+			send(_cSock, msgBuf, bufLen, 0);
+		}
+		else
+		{
+			char msgBuf[] = "Hello, I am server.";
+			int bufLen = strlen(msgBuf) + 1;
+			send(_cSock, msgBuf, bufLen, 0);
+		}
 	}
 
 	//colse the socket
 	closesocket(_sock);
 
 	WSACleanup();
+	printf("已退出\n");
+	getchar();
 
 	return 0;
 }
