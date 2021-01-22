@@ -1,4 +1,4 @@
-#define WIN32_LEAN_AND_MEAN
+ï»¿#define WIN32_LEAN_AND_MEAN
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 
@@ -7,6 +7,62 @@
 #include<iostream>
 
 //#pragma comment(lib,"ws2_32.lib")
+
+enum CMD
+{
+	CMD_LOGIN,
+	CMD_LOGIN_RESULT,
+	CMD_LOGOUT,
+	CMD_LOGOUT_RESULT,
+	CMD_ERROR
+};
+
+struct DataHeader
+{
+	short cmd;
+	short dataLength;
+};
+
+struct Login: public DataHeader
+{
+	Login()
+	{
+		dataLength = sizeof(Login);
+		cmd = CMD_LOGIN;
+	}
+	char userName[32];
+	char PassWord[32];
+};
+
+struct LoginResult: public DataHeader
+{
+	LoginResult()
+	{
+		dataLength = sizeof(LoginResult);
+		cmd = CMD_LOGIN_RESULT;
+	}
+	int result;
+};
+
+struct Logout: public DataHeader
+{
+	Logout()
+	{
+		dataLength = sizeof(Logout);
+		cmd = CMD_LOGOUT;
+	}
+	char userName[32];
+};
+
+struct LogoutResult: public DataHeader
+{
+	LogoutResult()
+	{
+		dataLength = sizeof(LogoutResult);
+		cmd = CMD_LOGOUT_RESULT;
+	}
+	int result;
+};
 
 int main()
 {
@@ -19,25 +75,25 @@ int main()
 	SOCKET _sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (INVALID_SOCKET == _sock)
 	{
-		printf("½¨Á¢SOCKETÊ§°Ü...\n");
+		printf("å»ºç«‹SOCKETå¤±è´¥...\n");
 	}
 	else
 	{
-		printf("³É¹¦½¨Á¢SOCKET...\n");
+		printf("æˆåŠŸå»ºç«‹SOCKET...\n");
 	}
 
 	//connnet to the server
 	sockaddr_in _sin = {};
 	_sin.sin_family = AF_INET;
 	_sin.sin_port = htons(4567);
-	_sin.sin_addr.S_un.S_addr = inet_addr("127.0.0.1"); //INADDR_ANY±íÊ¾ÈÎÒâ±¾»úµÄÈÎÒâipµØÖ·
+	_sin.sin_addr.S_un.S_addr = inet_addr("127.0.0.1"); //NADDR_ANYè¡¨ç¤ºä»»æ„æœ¬æœºçš„ä»»æ„ipåœ°å€
 	if (SOCKET_ERROR == connect(_sock, (sockaddr*)&_sin, sizeof(sockaddr_in)))
 	{
-		printf("Á¬½Ó·şÎñÆ÷Ê§°Ü...\n");
+		printf("è¿æ¥æœåŠ¡å™¨å¤±è´¥...\n");
 	}
 	else
 	{
-		printf("³É¹¦Á¬½Ó·şÎñÆ÷...\n");
+		printf("æˆåŠŸè¿æ¥æœåŠ¡å™¨...\n");
 	}
 
 	while (true)
@@ -49,21 +105,37 @@ int main()
 		//address the command
 		if (0 == strcmp(cmdBuf, "exit"))
 		{
-			printf("ÊÕµ½ÍË³öÃüÁî...\n");
+			printf("æ”¶åˆ°é€€å‡ºå‘½ä»¤...\n");
 			break;
+		}
+		else if(0 == strcmp(cmdBuf, "login"))
+		{
+			Login login;
+			strcpy_s(login.userName, "Allen");
+			strcpy_s(login.PassWord, "4584");
+			send(_sock, (char*)&login, sizeof(Login), 0);
+
+			//receive the information from server
+			DataHeader retHeader = {};
+			LoginResult loginRet = {};
+			recv(_sock, (char*)&loginRet, sizeof(LoginResult), 0);
+			printf("LoginResult: %d \n", loginRet.result);
+		}
+		else if (0 == strcmp(cmdBuf, "logout"))
+		{
+			Logout logout;
+			strcpy_s(logout.userName, "Allen");
+			send(_sock, (char*)&logout, sizeof(Logout), 0);
+
+			//receive the information from server
+			DataHeader retHeader = {};
+			LogoutResult logoutRet = {};
+			recv(_sock, (char*)&logoutRet, sizeof(LogoutResult), 0);
+			printf("LogoutResult: %d \n", logoutRet.result);
 		}
 		else
 		{
-			send(_sock, cmdBuf, strlen(cmdBuf) + 1, 0);
-			printf("Êı¾İÒÑ·¢ËÍ...\n");
-		}
-
-		//receive the information from server
-		char recvBuf[128] = {};
-		int nlen = recv(_sock, recvBuf, 128, 0); //recv function will return the length of the received information
-		if (nlen > 0)
-		{
-			printf("³É¹¦½ÓÊÕÊı¾İ£º%s \n", recvBuf);
+			printf("ä¸æ”¯æŒçš„å‘½ä»¤ï¼Œè¯·é‡æ–°è¾“å…¥...\n");
 		}
 	}
 
@@ -72,7 +144,7 @@ int main()
 	closesocket(_sock);
 
 	WSACleanup();
-	printf("ÒÑÍË³ö \n");
+	printf("å·²é€€å‡º \n");
 	getchar();
 
 	return 0;

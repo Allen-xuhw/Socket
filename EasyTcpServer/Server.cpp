@@ -1,4 +1,4 @@
-#define WIN32_LEAN_AND_MEAN
+ï»¿#define WIN32_LEAN_AND_MEAN
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 
@@ -8,6 +8,64 @@
 
 //#pragma comment(lib,"ws2_32.lib")
 
+enum CMD
+{
+	CMD_LOGIN,
+	CMD_LOGIN_RESULT,
+	CMD_LOGOUT,
+	CMD_LOGOUT_RESULT,
+	CMD_ERROR
+};
+
+struct DataHeader
+{
+	short cmd;
+	short dataLength;
+};
+
+struct Login : public DataHeader
+{
+	Login()
+	{
+		dataLength = sizeof(Login);
+		cmd = CMD_LOGIN;
+	}
+	char userName[32];
+	char PassWord[32];
+};
+
+struct LoginResult : public DataHeader
+{
+	LoginResult()
+	{
+		dataLength = sizeof(LoginResult);
+		cmd = CMD_LOGIN_RESULT;
+		result = 0;
+	}
+	int result;
+};
+
+struct Logout : public DataHeader
+{
+	Logout()
+	{
+		dataLength = sizeof(Logout);
+		cmd = CMD_LOGOUT;
+	}
+	char userName[32];
+};
+
+struct LogoutResult : public DataHeader
+{
+	LogoutResult()
+	{
+		dataLength = sizeof(LogoutResult);
+		cmd = CMD_LOGOUT_RESULT;
+		result = 0;
+	}
+	int result;
+};
+
 int main()
 {
 	//start windows socket 2.x
@@ -16,38 +74,38 @@ int main()
 	WSAStartup(ver, &dat);
 
 	//build a socket
-	SOCKET _sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); //AF_INET±íÊ¾ipv4
+	SOCKET _sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); //AF_INETï¿½ï¿½Ê¾ipv4
 	if (INVALID_SOCKET == _sock)
 	{
-		printf("½¨Á¢SOCKETÊ§°Ü...\n");
+		printf("å»ºç«‹SOCKETå¤±è´¥...\n");
 	}
 	else
 	{
-		printf("³É¹¦½¨Á¢SOCKET...\n");
+		printf("æˆåŠŸå»ºç«‹SOCKET...\n");
 	}
 
 	//bind a net port
 	sockaddr_in _sin = {};
 	_sin.sin_family = AF_INET;
 	_sin.sin_port = htons(4567); //host to a net unsigned short
-	_sin.sin_addr.S_un.S_addr = INADDR_ANY; //INADDR_ANY±íÊ¾ÈÎÒâ±¾»úµÄÈÎÒâipµØÖ·
+	_sin.sin_addr.S_un.S_addr = INADDR_ANY; //INADDR_ANYï¿½ï¿½Ê¾ï¿½ï¿½ï¿½â±¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ipï¿½ï¿½Ö·
 	if (SOCKET_ERROR == bind(_sock, (sockaddr*)&_sin, sizeof(_sin)))
 	{
-		printf("°ó¶¨¶Ë¿ÚÊ§°Ü...\n");
+		printf("ç»‘å®šç«¯å£å¤±è´¥...\n");
 	}
 	else
 	{
-		printf("³É¹¦°ó¶¨¶Ë¿Ú...\n");
+		printf("æˆåŠŸç»‘å®šç«¯å£...\n");
 	}
 
 	//listen to the net port
 	if (SOCKET_ERROR == listen(_sock, 5))
 	{
-		printf("¼àÌı¶Ë¿ÚÊ±²úÉú´íÎó...\n");
+		printf("ç›‘å¬å¤±è´¥...\n");
 	}
 	else
 	{
-		printf("ÕıÔÚ¼àÌı...\n");
+		printf("æ­£åœ¨ç›‘å¬...\n");
 	}
 
 	//accept the connection
@@ -57,50 +115,60 @@ int main()
 	_cSock = accept(_sock, (sockaddr*)&clientAddr, &nAddrLen);
 	if (INVALID_SOCKET == _cSock)
 	{
-		printf("Á¬½Ó¿Í»§¶ËÊ§°Ü...\n");
+		printf("è¿æ¥å®¢æˆ·ç«¯å¤±è´¥...\n");
 	}
-	printf("ĞÂ¿Í»§¶Ë: IP = %s \n", inet_ntoa(clientAddr.sin_addr));
-	char _recvBuf[128] = {};
+	printf("æ–°å®¢æˆ·ç«¯: IP = %s \n", inet_ntoa(clientAddr.sin_addr));
 	while (true)
 	{
 		//receive the data from the client
-		int nLen = recv(_cSock, _recvBuf, 128, 0);
+		DataHeader header = { };
+		int nLen = recv(_cSock, (char*)&header, sizeof(DataHeader), 0);
 		if (nLen <= 0)
 		{
-			printf("¿Í»§¶ËÒÑÀë¿ª...\n");
+			printf("å®¢æˆ·ç«¯å·²ç¦»å¼€...\n");
 			break;
 		}
 		else
 		{
-			printf("½ÓÊÕµ½ÃüÁî:%s \n", _recvBuf);
+			printf("æ¥æ”¶åˆ°å‘½ä»¤:%dï¼Œ æ•°æ®é•¿åº¦:%d \n", header.cmd, header.dataLength);
 		}
 
 		//address the request
-		if (0 == strcmp(_recvBuf, "getName"))
+		switch (header.cmd)
 		{
-			char msgBuf[] = "Allen";
-			int bufLen = strlen(msgBuf) + 1;
-			send(_cSock, msgBuf, bufLen, 0);
+			case CMD_LOGIN:
+			{
+				Login login = {};
+				int nLen = recv(_cSock, (char*)&login + sizeof(DataHeader), sizeof(Login) - sizeof(DataHeader), 0);
+				printf("æ”¶åˆ°å‘½ä»¤: CMD_LOGIN, æ•°æ®é•¿åº¦: %d, userName: %s, Password: %s \n", login.dataLength, login.userName, login.PassWord);
+				LoginResult ret;
+				send(_cSock, (const char*)&ret, sizeof(LoginResult), 0);
+				printf("å·²æˆåŠŸå“åº”å‘½ä»¤ \n");
+			}
+			break;
+			case CMD_LOGOUT:
+			{
+				Logout logout = {};
+				int nLen = recv(_cSock, (char*)&logout + sizeof(DataHeader), sizeof(Logout) - sizeof(DataHeader), 0);
+				printf("æ”¶åˆ°å‘½ä»¤: CMD_LOGOUT, æ•°æ®é•¿åº¦: %d, userName: %s \n", logout.dataLength, logout.userName);
+				LogoutResult ret;
+				send(_cSock, (const char*)&ret, sizeof(LogoutResult), 0);
+				printf("å·²æˆåŠŸå“åº”å‘½ä»¤ \n");
+			}
+			break;
+			default:
+			{
+				printf("æ”¶åˆ°æ— æ•ˆå‘½ä»¤ \n");
+			}
 		}
-		else if (0 == strcmp(_recvBuf, "getAge"))
-		{
-			char msgBuf[] = "22.";
-			int bufLen = strlen(msgBuf) + 1;
-			send(_cSock, msgBuf, bufLen, 0);
-		}
-		else
-		{
-			char msgBuf[] = "Hello, I am server.";
-			int bufLen = strlen(msgBuf) + 1;
-			send(_cSock, msgBuf, bufLen, 0);
-		}
+
 	}
 
 	//colse the socket
 	closesocket(_sock);
 
 	WSACleanup();
-	printf("ÒÑÍË³ö\n");
+	printf("å·²é€€å‡º\n");
 	getchar();
 
 	return 0;
