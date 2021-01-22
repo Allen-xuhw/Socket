@@ -77,11 +77,11 @@ int main()
 	SOCKET _sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); //AF_INET��ʾipv4
 	if (INVALID_SOCKET == _sock)
 	{
-		printf("����SOCKETʧ��...\n");
+		printf("建立SOCKET失败...\n");
 	}
 	else
 	{
-		printf("�ɹ�����SOCKET...\n");
+		printf("成功建立SOCKET...\n");
 	}
 
 	//bind a net port
@@ -91,21 +91,21 @@ int main()
 	_sin.sin_addr.S_un.S_addr = INADDR_ANY; //INADDR_ANY��ʾ���Ȿ��������ip��ַ
 	if (SOCKET_ERROR == bind(_sock, (sockaddr*)&_sin, sizeof(_sin)))
 	{
-		printf("�󶨶˿�ʧ��...\n");
+		printf("绑定端口失败...\n");
 	}
 	else
 	{
-		printf("�ɹ��󶨶˿�...\n");
+		printf("成功绑定端口...\n");
 	}
 
 	//listen to the net port
 	if (SOCKET_ERROR == listen(_sock, 5))
 	{
-		printf("�����˿�ʱ��������...\n");
+		printf("监听失败...\n");
 	}
 	else
 	{
-		printf("���ڼ���...\n");
+		printf("正在监听...\n");
 	}
 
 	//accept the connection
@@ -168,7 +168,7 @@ int main()
 	closesocket(_sock);
 
 	WSACleanup();
-	printf("���˳�\n");
+	printf("已退出\n");
 	getchar();
 
 	return 0;
