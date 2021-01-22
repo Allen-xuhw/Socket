@@ -1,4 +1,4 @@
-#define WIN32_LEAN_AND_MEAN
+ï»¿#define WIN32_LEAN_AND_MEAN
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 
@@ -75,25 +75,25 @@ int main()
 	SOCKET _sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (INVALID_SOCKET == _sock)
 	{
-		printf("½¨Á¢SOCKETÊ§°Ü...\n");
+		printf("å»ºç«‹SOCKETå¤±è´¥...\n");
 	}
 	else
 	{
-		printf("³É¹¦½¨Á¢SOCKET...\n");
+		printf("æˆåŠŸå»ºç«‹SOCKET...\n");
 	}
 
 	//connnet to the server
 	sockaddr_in _sin = {};
 	_sin.sin_family = AF_INET;
 	_sin.sin_port = htons(4567);
-	_sin.sin_addr.S_un.S_addr = inet_addr("127.0.0.1"); //INADDR_ANY±íÊ¾ÈÎÒâ±¾»úµÄÈÎÒâipµØÖ·
+	_sin.sin_addr.S_un.S_addr = inet_addr("127.0.0.1"); //NADDR_ANYè¡¨ç¤ºä»»æ„æœ¬æœºçš„ä»»æ„ipåœ°å€
 	if (SOCKET_ERROR == connect(_sock, (sockaddr*)&_sin, sizeof(sockaddr_in)))
 	{
-		printf("Á¬½Ó·şÎñÆ÷Ê§°Ü...\n");
+		printf("è¿æ¥æœåŠ¡å™¨å¤±è´¥...\n");
 	}
 	else
 	{
-		printf("³É¹¦Á¬½Ó·şÎñÆ÷...\n");
+		printf("æˆåŠŸè¿æ¥æœåŠ¡å™¨...\n");
 	}
 
 	while (true)
@@ -105,7 +105,7 @@ int main()
 		//address the command
 		if (0 == strcmp(cmdBuf, "exit"))
 		{
-			printf("ÊÕµ½ÍË³öÃüÁî...\n");
+			printf("æ”¶åˆ°é€€å‡ºå‘½ä»¤...\n");
 			break;
 		}
 		else if(0 == strcmp(cmdBuf, "login"))
@@ -135,7 +135,7 @@ int main()
 		}
 		else
 		{
-			printf("²»Ö§³ÖµÄÃüÁî£¬ÇëÖØĞÂÊäÈë...\n");
+			printf("ä¸æ”¯æŒçš„å‘½ä»¤ï¼Œè¯·é‡æ–°è¾“å…¥...\n");
 		}
 	}
 
@@ -144,7 +144,7 @@ int main()
 	closesocket(_sock);
 
 	WSACleanup();
-	printf("ÒÑÍË³ö \n");
+	printf("å·²é€€å‡º \n");
 	getchar();
 
 	return 0;

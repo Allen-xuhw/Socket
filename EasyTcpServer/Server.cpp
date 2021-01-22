@@ -1,4 +1,4 @@
-#define WIN32_LEAN_AND_MEAN
+ï»¿#define WIN32_LEAN_AND_MEAN
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 
@@ -74,38 +74,38 @@ int main()
 	WSAStartup(ver, &dat);
 
 	//build a socket
-	SOCKET _sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); //AF_INET±íÊ¾ipv4
+	SOCKET _sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); //AF_INETï¿½ï¿½Ê¾ipv4
 	if (INVALID_SOCKET == _sock)
 	{
-		printf("½¨Á¢SOCKETÊ§°Ü...\n");
+		printf("ï¿½ï¿½ï¿½ï¿½SOCKETÊ§ï¿½ï¿½...\n");
 	}
 	else
 	{
-		printf("³É¹¦½¨Á¢SOCKET...\n");
+		printf("ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½SOCKET...\n");
 	}
 
 	//bind a net port
 	sockaddr_in _sin = {};
 	_sin.sin_family = AF_INET;
 	_sin.sin_port = htons(4567); //host to a net unsigned short
-	_sin.sin_addr.S_un.S_addr = INADDR_ANY; //INADDR_ANY±íÊ¾ÈÎÒâ±¾»úµÄÈÎÒâipµØÖ·
+	_sin.sin_addr.S_un.S_addr = INADDR_ANY; //INADDR_ANYï¿½ï¿½Ê¾ï¿½ï¿½ï¿½â±¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ipï¿½ï¿½Ö·
 	if (SOCKET_ERROR == bind(_sock, (sockaddr*)&_sin, sizeof(_sin)))
 	{
-		printf("°ó¶¨¶Ë¿ÚÊ§°Ü...\n");
+		printf("ï¿½ó¶¨¶Ë¿ï¿½Ê§ï¿½ï¿½...\n");
 	}
 	else
 	{
-		printf("³É¹¦°ó¶¨¶Ë¿Ú...\n");
+		printf("ï¿½É¹ï¿½ï¿½ó¶¨¶Ë¿ï¿½...\n");
 	}
 
 	//listen to the net port
 	if (SOCKET_ERROR == listen(_sock, 5))
 	{
-		printf("¼àÌý¶Ë¿ÚÊ±²úÉú´íÎó...\n");
+		printf("ï¿½ï¿½ï¿½ï¿½ï¿½Ë¿ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½...\n");
 	}
 	else
 	{
-		printf("ÕýÔÚ¼àÌý...\n");
+		printf("ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½...\n");
 	}
 
 	//accept the connection
@@ -115,9 +115,9 @@ int main()
 	_cSock = accept(_sock, (sockaddr*)&clientAddr, &nAddrLen);
 	if (INVALID_SOCKET == _cSock)
 	{
-		printf("Á¬½Ó¿Í»§¶ËÊ§°Ü...\n");
+		printf("è¿žæŽ¥å®¢æˆ·ç«¯å¤±è´¥...\n");
 	}
-	printf("ÐÂ¿Í»§¶Ë: IP = %s \n", inet_ntoa(clientAddr.sin_addr));
+	printf("æ–°å®¢æˆ·ç«¯: IP = %s \n", inet_ntoa(clientAddr.sin_addr));
 	while (true)
 	{
 		//receive the data from the client
@@ -125,12 +125,12 @@ int main()
 		int nLen = recv(_cSock, (char*)&header, sizeof(DataHeader), 0);
 		if (nLen <= 0)
 		{
-			printf("¿Í»§¶ËÒÑÀë¿ª...\n");
+			printf("å®¢æˆ·ç«¯å·²ç¦»å¼€...\n");
 			break;
 		}
 		else
 		{
-			printf("½ÓÊÕµ½ÃüÁî:%d£¬ Êý¾Ý³¤¶È:%d \n", header.cmd, header.dataLength);
+			printf("æŽ¥æ”¶åˆ°å‘½ä»¤:%dï¼Œ æ•°æ®é•¿åº¦:%d \n", header.cmd, header.dataLength);
 		}
 
 		//address the request
@@ -140,25 +140,25 @@ int main()
 			{
 				Login login = {};
 				int nLen = recv(_cSock, (char*)&login + sizeof(DataHeader), sizeof(Login) - sizeof(DataHeader), 0);
-				printf("ÊÕµ½ÃüÁî: CMD_LOGIN, Êý¾Ý³¤¶È: %d, userName: %s, Password: %s \n", login.dataLength, login.userName, login.PassWord);
+				printf("æ”¶åˆ°å‘½ä»¤: CMD_LOGIN, æ•°æ®é•¿åº¦: %d, userName: %s, Password: %s \n", login.dataLength, login.userName, login.PassWord);
 				LoginResult ret;
 				send(_cSock, (const char*)&ret, sizeof(LoginResult), 0);
-				printf("ÒÑ³É¹¦ÏìÓ¦ÃüÁî \n");
+				printf("å·²æˆåŠŸå“åº”å‘½ä»¤ \n");
 			}
 			break;
 			case CMD_LOGOUT:
 			{
 				Logout logout = {};
 				int nLen = recv(_cSock, (char*)&logout + sizeof(DataHeader), sizeof(Logout) - sizeof(DataHeader), 0);
-				printf("ÊÕµ½ÃüÁî: CMD_LOGOUT, Êý¾Ý³¤¶È: %d, userName: %s \n", logout.dataLength, logout.userName);
+				printf("æ”¶åˆ°å‘½ä»¤: CMD_LOGOUT, æ•°æ®é•¿åº¦: %d, userName: %s \n", logout.dataLength, logout.userName);
 				LogoutResult ret;
 				send(_cSock, (const char*)&ret, sizeof(LogoutResult), 0);
-				printf("ÒÑ³É¹¦ÏìÓ¦ÃüÁî \n");
+				printf("å·²æˆåŠŸå“åº”å‘½ä»¤ \n");
 			}
 			break;
 			default:
 			{
-				printf("ÊÕµ½ÎÞÐ§ÃüÁî \n");
+				printf("æ”¶åˆ°æ— æ•ˆå‘½ä»¤ \n");
 			}
 		}
 
@@ -168,7 +168,7 @@ int main()
 	closesocket(_sock);
 
 	WSACleanup();
-	printf("ÒÑÍË³ö\n");
+	printf("ï¿½ï¿½ï¿½Ë³ï¿½\n");
 	getchar();
 
 	return 0;
