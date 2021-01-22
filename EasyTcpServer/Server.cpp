@@ -8,6 +8,64 @@
 
 //#pragma comment(lib,"ws2_32.lib")
 
+enum CMD
+{
+	CMD_LOGIN,
+	CMD_LOGIN_RESULT,
+	CMD_LOGOUT,
+	CMD_LOGOUT_RESULT,
+	CMD_ERROR
+};
+
+struct DataHeader
+{
+	short cmd;
+	short dataLength;
+};
+
+struct Login : public DataHeader
+{
+	Login()
+	{
+		dataLength = sizeof(Login);
+		cmd = CMD_LOGIN;
+	}
+	char userName[32];
+	char PassWord[32];
+};
+
+struct LoginResult : public DataHeader
+{
+	LoginResult()
+	{
+		dataLength = sizeof(LoginResult);
+		cmd = CMD_LOGIN_RESULT;
+		result = 0;
+	}
+	int result;
+};
+
+struct Logout : public DataHeader
+{
+	Logout()
+	{
+		dataLength = sizeof(Logout);
+		cmd = CMD_LOGOUT;
+	}
+	char userName[32];
+};
+
+struct LogoutResult : public DataHeader
+{
+	LogoutResult()
+	{
+		dataLength = sizeof(LogoutResult);
+		cmd = CMD_LOGOUT_RESULT;
+		result = 0;
+	}
+	int result;
+};
+
 int main()
 {
 	//start windows socket 2.x
@@ -60,11 +118,11 @@ int main()
 		printf("连接客户端失败...\n");
 	}
 	printf("新客户端: IP = %s \n", inet_ntoa(clientAddr.sin_addr));
-	char _recvBuf[128] = {};
 	while (true)
 	{
 		//receive the data from the client
-		int nLen = recv(_cSock, _recvBuf, 128, 0);
+		DataHeader header = { };
+		int nLen = recv(_cSock, (char*)&header, sizeof(DataHeader), 0);
 		if (nLen <= 0)
 		{
 			printf("客户端已离开...\n");
@@ -72,28 +130,38 @@ int main()
 		}
 		else
 		{
-			printf("接收到命令:%s \n", _recvBuf);
+			printf("接收到命令:%d， 数据长度:%d \n", header.cmd, header.dataLength);
 		}
 
 		//address the request
-		if (0 == strcmp(_recvBuf, "getName"))
+		switch (header.cmd)
 		{
-			char msgBuf[] = "Allen";
-			int bufLen = strlen(msgBuf) + 1;
-			send(_cSock, msgBuf, bufLen, 0);
+			case CMD_LOGIN:
+			{
+				Login login = {};
+				int nLen = recv(_cSock, (char*)&login + sizeof(DataHeader), sizeof(Login) - sizeof(DataHeader), 0);
+				printf("收到命令: CMD_LOGIN, 数据长度: %d, userName: %s, Password: %s \n", login.dataLength, login.userName, login.PassWord);
+				LoginResult ret;
+				send(_cSock, (const char*)&ret, sizeof(LoginResult), 0);
+				printf("已成功响应命令 \n");
+			}
+			break;
+			case CMD_LOGOUT:
+			{
+				Logout logout = {};
+				int nLen = recv(_cSock, (char*)&logout + sizeof(DataHeader), sizeof(Logout) - sizeof(DataHeader), 0);
+				printf("收到命令: CMD_LOGOUT, 数据长度: %d, userName: %s \n", logout.dataLength, logout.userName);
+				LogoutResult ret;
+				send(_cSock, (const char*)&ret, sizeof(LogoutResult), 0);
+				printf("已成功响应命令 \n");
+			}
+			break;
+			default:
+			{
+				printf("收到无效命令 \n");
+			}
 		}
-		else if (0 == strcmp(_recvBuf, "getAge"))
-		{
-			char msgBuf[] = "22.";
-			int bufLen = strlen(msgBuf) + 1;
-			send(_cSock, msgBuf, bufLen, 0);
-		}
-		else
-		{
-			char msgBuf[] = "Hello, I am server.";
-			int bufLen = strlen(msgBuf) + 1;
-			send(_cSock, msgBuf, bufLen, 0);
-		}
+
 	}
 
 	//colse the socket

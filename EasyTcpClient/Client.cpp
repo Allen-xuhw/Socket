@@ -8,6 +8,62 @@
 
 //#pragma comment(lib,"ws2_32.lib")
 
+enum CMD
+{
+	CMD_LOGIN,
+	CMD_LOGIN_RESULT,
+	CMD_LOGOUT,
+	CMD_LOGOUT_RESULT,
+	CMD_ERROR
+};
+
+struct DataHeader
+{
+	short cmd;
+	short dataLength;
+};
+
+struct Login: public DataHeader
+{
+	Login()
+	{
+		dataLength = sizeof(Login);
+		cmd = CMD_LOGIN;
+	}
+	char userName[32];
+	char PassWord[32];
+};
+
+struct LoginResult: public DataHeader
+{
+	LoginResult()
+	{
+		dataLength = sizeof(LoginResult);
+		cmd = CMD_LOGIN_RESULT;
+	}
+	int result;
+};
+
+struct Logout: public DataHeader
+{
+	Logout()
+	{
+		dataLength = sizeof(Logout);
+		cmd = CMD_LOGOUT;
+	}
+	char userName[32];
+};
+
+struct LogoutResult: public DataHeader
+{
+	LogoutResult()
+	{
+		dataLength = sizeof(LogoutResult);
+		cmd = CMD_LOGOUT_RESULT;
+	}
+	int result;
+};
+
 int main()
 {
 	//start windows socket 2.x
@@ -52,18 +108,34 @@ int main()
 			printf("收到退出命令...\n");
 			break;
 		}
+		else if(0 == strcmp(cmdBuf, "login"))
+		{
+			Login login;
+			strcpy_s(login.userName, "Allen");
+			strcpy_s(login.PassWord, "4584");
+			send(_sock, (char*)&login, sizeof(Login), 0);
+
+			//receive the information from server
+			DataHeader retHeader = {};
+			LoginResult loginRet = {};
+			recv(_sock, (char*)&loginRet, sizeof(LoginResult), 0);
+			printf("LoginResult: %d \n", loginRet.result);
+		}
+		else if (0 == strcmp(cmdBuf, "logout"))
+		{
+			Logout logout;
+			strcpy_s(logout.userName, "Allen");
+			send(_sock, (char*)&logout, sizeof(Logout), 0);
+
+			//receive the information from server
+			DataHeader retHeader = {};
+			LogoutResult logoutRet = {};
+			recv(_sock, (char*)&logoutRet, sizeof(LogoutResult), 0);
+			printf("LogoutResult: %d \n", logoutRet.result);
+		}
 		else
 		{
-			send(_sock, cmdBuf, strlen(cmdBuf) + 1, 0);
-			printf("数据已发送...\n");
-		}
-
-		//receive the information from server
-		char recvBuf[128] = {};
-		int nlen = recv(_sock, recvBuf, 128, 0); //recv function will return the length of the received information
-		if (nlen > 0)
-		{
-			printf("成功接收数据：%s \n", recvBuf);
+			printf("不支持的命令，请重新输入...\n");
 		}
 	}
 
