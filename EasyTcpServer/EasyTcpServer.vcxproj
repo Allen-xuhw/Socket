@@ -21,6 +21,10 @@
   <ItemGroup>
     <ClCompile Include="Server.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="EasyTcpServer.hpp" />
+    <ClInclude Include="MessageHeader.hpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
