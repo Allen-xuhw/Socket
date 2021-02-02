@@ -2,7 +2,7 @@
 #define _EasyTcpServer_hpp_
 
 #ifdef _WIN32
-	#define FD_SETSIZE 1024
+	#define FD_SETSIZE 4024
 	#include<WinSock2.h>
 	#include<windows.h>
 	#define WIN32_LEAN_AND_MEAN
