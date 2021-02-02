@@ -36,11 +36,25 @@ int main()
 	//创建类对象
 	const int cCount = 100;
 	EasyTcpClient* client[cCount];
+
 	for (int n = 0; n < cCount; n++)
 	{
+		if (!g_bRun)
+		{
+			return 0;
+		}
 		client[n] = new EasyTcpClient();
-		client[n]->InitSocket();
-		client[n]->Connect("192.168.2.113", 4567); //192.168.2.113 172.27.131.5 127.0.0.1
+	}
+
+	for (int n = 0; n < cCount; n++)
+	{
+		if (!g_bRun)
+		{
+			return 0;
+		}
+		//client[n]->InitSocket();
+		client[n]->Connect("127.0.0.1", 4567); //192.168.2.113 172.27.131.5 127.0.0.1
+		printf("Connect=%d\n", n);
 	}
 
 
@@ -58,7 +72,7 @@ int main()
 		for (int n = 0; n < cCount; n++)
 		{
 			client[n]->SendData(&login);
-			client[n]->OnRun();
+			//client[n]->OnRun();
 		}
 	}
 
@@ -67,7 +81,6 @@ int main()
 		client[n]->Close();
 	}
 	printf("已退出 \n");
-	getchar();
 
 	return 0;
 }

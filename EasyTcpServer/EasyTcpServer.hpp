@@ -1,26 +1,27 @@
 #ifndef _EasyTcpServer_hpp_
 #define _EasyTcpServer_hpp_
 
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
-
 #ifdef _WIN32
-#include<WinSock2.h>
-#include<windows.h>
-#define WIN32_LEAN_AND_MEAN
-#pragma comment(lib,"ws2_32.lib")
+	#define FD_SETSIZE 1024
+	#include<WinSock2.h>
+	#include<windows.h>
+	#define WIN32_LEAN_AND_MEAN
+	#define _WINSOCK_DEPRECATED_NO_WARNINGS
+	#pragma comment(lib,"ws2_32.lib")
 #else
-#include<unistd.h>
-#include<arpa/inet.h>
-#include<string.h>
+	#include<unistd.h>
+	#include<arpa/inet.h>
+	#include<string.h>
 
-#define SOCKET int
-#define INVALID_SOCKET (SOCKET)(~0)
-#define SOCKET_ERROR (-1)
+	#define SOCKET int
+	#define INVALID_SOCKET (SOCKET)(~0)
+	#define SOCKET_ERROR (-1)
 #endif
 
 #include<stdio.h>
 #include<vector>
 #include"MessageHeader.hpp"
+#include"CELLTimestamp.hpp"
 
 #ifndef RECV_BUFF_SIZE
 	#define RECV_BUFF_SIZE 10240
@@ -66,10 +67,13 @@ class EasyTcpServer
 private:
 	std::vector<ClientSocket*> _clients; //采用指针形式定义成员变量，用new生成的变量位于堆中，不会导致爆栈
 	SOCKET _sock;
+	CELLTimestamp _tTime;
+	int _recvCount;
 public:
 	EasyTcpServer()
 	{
 		_sock = INVALID_SOCKET;
+		_recvCount = 0;
 	}
 	virtual ~EasyTcpServer()
 	{
@@ -179,9 +183,9 @@ public:
 		}
 		else
 		{
-			printf("<Socket=%d>接收到新客户端: IP = %s, Socket = %d \n", (int)_sock, inet_ntoa(clientAddr.sin_addr), (int)cSock);//新客户端加入
-			NewUserJoin userJoin;
-			SendDataToAll(&userJoin); //通知现有客户端有新客户端加入
+			//printf("<Socket=%d>接收到新客户端<socket=%d>: IP = %s, Socket = %d \n", (int)_sock, (int)_clients.size(), inet_ntoa(clientAddr.sin_addr), (int)cSock);//新客户端加入
+			//NewUserJoin userJoin;
+			//SendDataToAll(&userJoin); //通知现有客户端有新客户端加入
 			_clients.push_back(new ClientSocket(cSock));
 		}
 		return cSock;
@@ -260,6 +264,7 @@ public:
 			{
 				FD_CLR(_sock, &fdRead);
 				Accept();
+				return true;
 			}
 
 			//处理从_sock接收到的，即来自Client的_cSock；若第n个socket退出，将其从_clients中移除
@@ -332,14 +337,24 @@ public:
 	virtual void OnNetMsg(DataHeader* header, SOCKET cSock)
 	{
 		//处理客户端请求
+
+		_recvCount++;
+		auto t1 = _tTime.getElapsedSecond();
+		if (_tTime.getElapsedSecond() >= 1.0)
+		{
+			printf("time<%1f>,socket<%d>,clients<%d>,recvCount<%d>\n", t1, (int)_sock,(int)_clients.size(), _recvCount);
+			_tTime.update();
+			_recvCount = 0;
+		}
+
 		switch (header->cmd)
 		{
 		case CMD_LOGIN:
 		{
 			Login* login = (Login*)header;
 			//printf("收到<Socket=%d>请求: CMD_LOGIN, 数据长度: %d, userName: %s, Password: %s \n", (int)cSock, login->dataLength, login->userName, login->PassWord);
-			LoginResult ret;
-			send(cSock, (const char*)&ret, sizeof(LoginResult), 0);
+			//LoginResult ret;
+			//send(cSock, (const char*)&ret, sizeof(LoginResult), 0);
 			//printf("已成功响应请求 \n");
 		}
 		break;
@@ -347,8 +362,8 @@ public:
 		{
 			Logout* logout = (Logout*)header;
 			//printf("收到<Socket=%d>请求: CMD_LOGOUT, 数据长度: %d, userName: %s \n", (int)cSock, logout->dataLength, logout->userName);
-			LogoutResult ret;
-			send(cSock, (const char*)&ret, sizeof(LogoutResult), 0);
+			//LogoutResult ret;
+			//send(cSock, (const char*)&ret, sizeof(LogoutResult), 0);
 			//printf("已成功响应请求 \n");
 		}
 		break;

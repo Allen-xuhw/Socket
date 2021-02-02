@@ -56,7 +56,7 @@ public:
 		}
 		else
 		{
-			printf("成功建立SOCKET=<%d>...\n", (int)_sock);
+			//printf("成功建立SOCKET=<%d>...\n", (int)_sock);
 		}
 		return _sock;
 	}
@@ -83,7 +83,7 @@ public:
 		}
 		else
 		{
-			printf("<socket=%d>成功连接服务器<%s:%d>...\n", (int)_sock, ip, port);
+			//printf("<socket=%d>成功连接服务器<%s:%d>...\n", (int)_sock, ip, port);
 		}
 		return ret;
 	}

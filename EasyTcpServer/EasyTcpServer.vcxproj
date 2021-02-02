@@ -22,6 +22,7 @@
     <ClCompile Include="Server.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CELLTimestamp.hpp" />
     <ClInclude Include="EasyTcpServer.hpp" />
     <ClInclude Include="MessageHeader.hpp" />
   </ItemGroup>
