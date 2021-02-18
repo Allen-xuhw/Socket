@@ -37,6 +37,7 @@ EasyTcpClient* client[cCount]; //客户端数组
 
 void sendThread(int id)
 {
+	printf("thread<%d>, start\n", id);
 	int c = cCount / tCount;
 	int begin = (id - 1) * c;
 	int end = id * c;
@@ -50,30 +51,38 @@ void sendThread(int id)
 	{
 		//client[n]->InitSocket();
 		client[n]->Connect("127.0.0.1", 4567); //192.168.2.113 172.27.131.5 127.0.0.1
-		printf("Thread<%d>,Connect=%d\n", id, n);
 	}
+
+	printf("Thread<%d>,Connect<begin=%d, end=%d>\n", id, begin, end);
 
 	std::chrono::milliseconds t(3000);
 	std::this_thread::sleep_for(t);
 
 
-	Login login;
-	strcpy_s(login.userName, "Allen");
-	strcpy_s(login.PassWord, "4584");
+	Login login[10];
+	for (int n = 0; n < 10; n++)
+	{
+		strcpy_s(login[n].userName, "Allen");
+		strcpy_s(login[n].PassWord, "4584");
+	}
 
+	const int nLen = sizeof(login);
 	while (g_bRun)
 	{
 		for (int n = begin; n < end; n++)
 		{
-			client[n]->SendData(&login);
-			//client[n]->OnRun();
+			client[n]->SendData(login, nLen);
+			client[n]->OnRun();
 		}
 	}
 
 	for (int n = begin; n < end; n++)
 	{
 		client[n]->Close();
+		delete client[n];
 	}
+
+	printf("thread<%d>, exit\n", id);
 }
 
 
