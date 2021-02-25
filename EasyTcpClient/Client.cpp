@@ -4,32 +4,24 @@
 //#pragma comment(lib,"ws2_32.lib")
 
 
-void cmdThread(EasyTcpClient* client)
+bool g_bRun = true;
+void cmdThread()
 {
 	while (true)
 	{
 		char cmdBuf[128] = {};
+#ifdef _WIN32
 		scanf_s("%s", cmdBuf, 128);
+#else
+		scanf("%s", cmdBuf);
+#endif
 
 		//address the command
 		if (0 == strcmp(cmdBuf, "exit"))
 		{
-			client->Close();
 			printf("收到退出命令...\n");
+			g_bRun = false;
 			return;
-		}
-		else if (0 == strcmp(cmdBuf, "login"))
-		{
-			Login login;
-			strcpy_s(login.userName, "Allen");
-			strcpy_s(login.PassWord, "4584");
-			client->SendData(&login);
-		}
-		else if (0 == strcmp(cmdBuf, "logout"))
-		{
-			Logout logout;
-			strcpy_s(logout.userName, "Allen");
-			client->SendData(&logout);
 		}
 		else
 		{
@@ -39,34 +31,78 @@ void cmdThread(EasyTcpClient* client)
 }
 
 
-int main()
+const int cCount = 10000; //客户端数量
+const int tCount = 4; //线程数量
+EasyTcpClient* client[cCount]; //客户端数组
+
+void sendThread(int id)
 {
-	//创建类对象
-	EasyTcpClient client;
-	client.InitSocket();
-	client.Connect("127.0.0.1", 4567);
+	printf("thread<%d>, start\n", id);
+	int c = cCount / tCount;
+	int begin = (id - 1) * c;
+	int end = id * c;
 
-	EasyTcpClient client2;
-	client2.InitSocket();
-	client2.Connect("127.0.0.1", 4567);
-
-	//启动UI线程
-	std::thread t1(cmdThread, &client);
-	t1.detach();
-
-	std::thread t2(cmdThread, &client2);
-	t2.detach();
-
-	while (client.isRun() || client2.isRun())
+	for (int n = begin; n < end; n++)
 	{
-		client.OnRun();
-		client2.OnRun();
+		client[n] = new EasyTcpClient();
 	}
 
-	client.Close();
-	client2.Close();
+	for (int n = begin; n < end; n++)
+	{
+		//client[n]->InitSocket();
+		client[n]->Connect("127.0.0.1", 4567); //192.168.2.113 172.27.131.5 127.0.0.1
+	}
+
+	printf("Thread<%d>,Connect<begin=%d, end=%d>\n", id, begin, end);
+
+	std::chrono::milliseconds t(3000);
+	std::this_thread::sleep_for(t);
+
+
+	Login login[10];
+	for (int n = 0; n < 10; n++)
+	{
+		strcpy_s(login[n].userName, "Allen");
+		strcpy_s(login[n].PassWord, "4584");
+	}
+
+	const int nLen = sizeof(login);
+	while (g_bRun)
+	{
+		for (int n = begin; n < end; n++)
+		{
+			client[n]->SendData(login, nLen);
+			client[n]->OnRun();
+		}
+	}
+
+	for (int n = begin; n < end; n++)
+	{
+		client[n]->Close();
+		delete client[n];
+	}
+
+	printf("thread<%d>, exit\n", id);
+}
+
+
+int main()
+{
+	//启动UI线程
+	std::thread t1(cmdThread);
+	t1.detach();
+
+	//启动发送线程
+	for (int n = 0; n < tCount; n++)
+	{
+		std::thread t1(sendThread, n+1);
+		t1.detach();
+	}
+
+	while (g_bRun)
+		Sleep(100);
+
 	printf("已退出 \n");
-	getchar();
 
 	return 0;
 }
