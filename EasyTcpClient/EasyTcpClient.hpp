@@ -152,21 +152,22 @@ public:
 #ifndef RECV_BUFF_SIZE
 	#define RECV_BUFF_SIZE 10240
 #endif
-	char _szRecv[RECV_BUFF_SIZE] = {}; //接收缓冲区
+	//char _szRecv[RECV_BUFF_SIZE] = {}; //接收缓冲区
 	char _szMsgBuf[5 * RECV_BUFF_SIZE] = {}; //消息缓冲区
 	int _lastPos = 0; //消息缓冲区数据长度
 
 	int RecvData()
 	{
 		//接收客户端数据
-		int nLen = (int)recv(_sock, _szRecv, RECV_BUFF_SIZE, 0);
+		char* szRecv = _szMsgBuf + _lastPos;
+		int nLen = (int)recv(_sock, szRecv, (RECV_BUFF_SIZE*5) - _lastPos, 0);
 		if (nLen <= 0)
 		{
 			printf("<socket=%d>与服务端断开连接，任务结束...\n", (int)_sock);
 			return -1;
 		}
 
-		memcpy(_szMsgBuf + _lastPos, _szRecv, nLen); //将收取到的数据拷贝到消息缓冲区
+		//memcpy(_szMsgBuf + _lastPos, _szRecv, nLen); //将收取到的数据拷贝到消息缓冲区
 		_lastPos += nLen;
 
 		while (_lastPos >= sizeof(DataHeader))
